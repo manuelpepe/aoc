@@ -38,7 +38,7 @@ func (pq *PriorityQueue[T]) Empty() bool {
 
 func (pq *PriorityQueue[T]) Push(val T, priority int) {
 	pq.lastIx++
-	pq.arr = slices.Insert(pq.arr, pq.lastIx, container[T]{val, priority}) // is this leaking memory if push/pop/push/pop/push/pop/... ?
+	pq.arr = append(pq.arr, container[T]{val, priority})
 	pq.heapifyUp(pq.lastIx)
 }
 
@@ -50,6 +50,7 @@ func (pq *PriorityQueue[T]) Pop() (T, bool) {
 
 	out := pq.arr[0]
 	pq.arr[0] = pq.arr[pq.lastIx]
+	pq.arr = slices.Delete(pq.arr, pq.lastIx, len(pq.arr))
 	pq.lastIx--
 	pq.heapifyDown(0)
 	return out.item, true
@@ -90,6 +91,7 @@ func (pq *PriorityQueue[T]) heapifyDown(ix int) {
 			pq.swap(leftIx, ix)
 			pq.heapifyDown(leftIx)
 		}
+		return
 	}
 
 	// two childs
