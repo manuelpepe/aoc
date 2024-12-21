@@ -1,0 +1,1 @@
+simple script to find differences in output between a correct solution and my incorrect one
