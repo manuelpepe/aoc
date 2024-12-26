@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"strings"
@@ -11,6 +12,8 @@ import (
 func main() {
 	edges := parse(os.Args[1])
 	fmt.Println(sol1(edges))
+	fmt.Println(sol2(edges))
+
 }
 
 func parse(file string) map[string][]string {
@@ -94,4 +97,70 @@ func findCyclesRec(node string, edges map[string][]string, currentPath []string)
 	}
 
 	return out
+}
+
+func sol2(edges map[string][]string) string {
+	allverts := slices.Collect(maps.Keys(edges))
+	items := bk(edges, []string{}, allverts, []string{})
+	slices.Sort(items)
+	return strings.Join(items, ",")
+}
+
+// N = neighbors
+// R = all vertices contained in clique
+// P = potential vertices in clique
+// X = vertices not contained in clique
+//
+// Bron–Kerbosch algorithm
+// https://www.dcs.gla.ac.uk/~pat/jchoco/clique/enumeration/tex/report.pdf
+func bk(N map[string][]string, R []string, P []string, X []string) []string {
+
+	if len(P) == 0 && len(X) == 0 {
+		// fmt.Printf("found max clique: %+v\n", R)
+		return R
+	}
+
+	max := []string{}
+
+	for len(P) > 0 {
+		v := P[0]
+
+		r := bk(N, union(R, v), intersection(P, N[v]), intersection(X, N[v]))
+		if r != nil && len(r) > len(max) {
+			max = r
+		}
+
+		P = complement(P, []string{v})
+		X = union(X, v)
+	}
+
+	return max
+}
+
+func intersection(A, B []string) []string {
+	out := make([]string, 0)
+	for _, s := range A {
+		if slices.Contains(B, s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func complement(A, B []string) []string {
+	out := make([]string, 0)
+	for _, s := range A {
+		if !slices.Contains(B, s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func union(A []string, b string) []string {
+	cln := slices.Clone(A)
+	if slices.Contains(A, b) {
+		return cln
+	}
+	return append(cln, b)
 }
