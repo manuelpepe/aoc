@@ -42,7 +42,9 @@ func main() {
 
 	machines := parse(file)
 
-	fmt.Printf("solution 1 is: %d\n", sol1(machines))
+	// fmt.Printf("solution 1 is: %d\n", sol1(machines))
+	fmt.Printf("solution 1 is: %d\n", sol1_b(machines))
+	fmt.Printf("solution 2 is: %d\n", sol2(machines))
 }
 
 func parse(file *os.File) []Machine {
@@ -102,6 +104,7 @@ func readIntTo(r *bufio.Reader, delim byte) int {
 	return int(parsed)
 }
 
+// Recursive solution
 func sol1(machines []Machine) int {
 	acc := 0
 
@@ -145,4 +148,70 @@ func solve(m Machine, a, b int) int {
 	cache[call{m, a, b}] = res
 
 	return res
+}
+
+// Algebraic solution
+func sol1_b(machines []Machine) int {
+	acc := 0
+
+	for _, m := range machines {
+		tokens := calculate(m)
+		acc += tokens
+	}
+
+	return acc
+}
+
+// A = number of presses for A
+// B = number of presses for B
+// (a_x, a_y, b_x, b_y) = claw movements from A and B buttons in XY axis
+// (p_x, p_y) = prize positioni in XY axis
+//
+// Then:
+//
+//	A*a_x + B*B_x = p_x
+//	A*a_y + B*b_y = p_y
+//
+// E.g.
+//
+//	Button A: X+94, Y+34
+//	Button B: X+22, Y+67
+//	Prize: X=8400, Y=5400
+//
+//	94A + 22B = 8400
+//	34A + 67B = 5400
+//
+// Then solve for A and B.
+// With Cramer's rule:
+//
+//	A = (p_x*b_y - prize_y*b_x) / (a_x*b_y - a_y*b_x)
+//	B = (a_x*p_y - a_y*p_x) / (a_x*b_y - a_y*b_x)
+func calculate(m Machine) int {
+	A, B, Prize := m.A, m.B, m.Prize
+
+	aPresses := (Prize.X*B.Y - Prize.Y*B.X) / (A.X*B.Y - A.Y*B.X)
+	bPresses := (A.X*Prize.Y - A.Y*Prize.X) / (A.X*B.Y - A.Y*B.X)
+
+	final := XY{
+		X: A.X*aPresses + B.X*bPresses,
+		Y: A.Y*aPresses + B.Y*bPresses,
+	}
+
+	if final == Prize {
+		return aPresses*3 + bPresses
+	}
+	return 0
+}
+
+func sol2(machines []Machine) int {
+	acc := 0
+
+	for _, m := range machines {
+		m.Prize.X += 10000000000000
+		m.Prize.Y += 10000000000000
+		tokens := calculate(m)
+		acc += tokens
+	}
+
+	return acc
 }
