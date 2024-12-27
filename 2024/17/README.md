@@ -10,6 +10,7 @@ There seems to be some relation between each octet in the input number and the o
 
 Here are some inputs and the outputs they produce
 
+```
 o30 = 3,0
 o300 = 5,3,0
 o3002 = 5,5,3,0
@@ -18,6 +19,7 @@ o300202 = 0,3,5,5,3,0
 o3002511 = 6,0,3,5,5,3,0
 o30025110 = 1,6,0,3,5,5,3,0
 o300251105 = 3,1,6,0,3,5,5,3,0
+```
 
 Each octet adds a digit to the output.
 
@@ -40,7 +42,9 @@ output for A=2203 (o4233) (b100010011011): 2,4,1,5
 I couldn't generate the third octet group...
 I still tried to & the numbers with some empty data for the third:
 
+```
 3002 5110 0000 4233 octal = 105734712854683 decimal
+```
 
 which generates
 
@@ -111,3 +115,48 @@ o3710 (1992)
 
 I managed to get some variations up to the second octal but failed to go past it and eventually ran out of options for the first one.
 
+
+##### *time passes...*
+
+I came back after a couple of days and tried to do a simpler search. 
+Starting from the leftmost octet increase it by 1 until the generated rightmost instruction set matches the what's expected. 
+This is the final code:
+
+```go
+func sol2(m Machine) int {
+	// get all instructions
+	nums := make([]byte, 0)
+	for i := range m.intructions {
+		nums = append(nums, byte(m.intructions[i].opcode))
+		nums = append(nums, byte(m.intructions[i].operand))
+	}
+
+	octIx := 15            // hardcoded for the 16 instruction input
+	n := 01000000000000000 // start with leftmost octet at 1
+
+	for {
+		if octIx < 0 {
+			break
+		}
+
+		exp := join(nums[octIx:])
+
+		wa := with_a(m, n)
+		spl := strings.Split(wa, ",")[octIx:]
+		res := strings.Join(spl, ",")
+
+		// fmt.Printf("0o%o (%d)-> %+v == %+v\n", n, octIx, res, exp)
+
+		if res == exp {
+			octIx -= 1
+			continue
+		}
+
+		n += 01 << (3 * octIx) // add 1 to the leftmost unmatching octal
+	}
+
+	return n
+}
+```
+
+which seems to work quite well.

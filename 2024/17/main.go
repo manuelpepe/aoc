@@ -151,9 +151,9 @@ func main() {
 
 	if len(os.Args) == 2 {
 		machine.Reset()
-		fmt.Printf("output: %s\n", sol1(machine))
+		fmt.Printf("solution 1: %s\n", sol1(machine))
 		machine.Reset()
-		fmt.Printf("output 2: %d\n", sol2(machine))
+		fmt.Printf("solution 2: %d\n", sol2(machine))
 	}
 
 	if len(os.Args) == 3 {
@@ -233,50 +233,38 @@ func smallest_from(m Machine, exp string, from int) int {
 }
 
 func sol2(m Machine) int {
-
+	// get all instructions
 	nums := make([]byte, 0)
 	for i := range m.intructions {
 		nums = append(nums, byte(m.intructions[i].opcode))
 		nums = append(nums, byte(m.intructions[i].operand))
 	}
 
-	acc := 0
+	octIx := 15            // hardcoded for the 16 instruction input
+	n := 01000000000000000 // start with leftmost octet at 1
 
-	totalOcts := len(nums) / 4
-	instIx := len(nums)
-	lastN := make(map[int]int)
-
-	for octIx := 0; octIx < totalOcts; octIx++ {
+	for {
 		if octIx < 0 {
-			panic("oob")
+			break
 		}
-		fourocts := join(nums[instIx-4 : instIx])
 
-		fmt.Printf("-> checking octet %d [%s] from o%o (%d)\n", octIx, fourocts, lastN[octIx], lastN[octIx])
+		exp := join(nums[octIx:])
 
-		next_smallest := smallest_from(m, fourocts, lastN[octIx]+1)
-		if next_smallest == 0 {
-			fmt.Printf("    -> failed octet %d , going back\n", octIx)
-			acc = acc >> 12
-			instIx += 4
-			octIx -= 2
+		wa := with_a(m, n)
+		spl := strings.Split(wa, ",")[octIx:]
+		res := strings.Join(spl, ",")
+
+		// fmt.Printf("0o%o (%d)-> %+v == %+v\n", n, octIx, res, exp)
+
+		if res == exp {
+			octIx -= 1
 			continue
 		}
 
-		acc = acc << 12
-		acc = acc | next_smallest
-
-		fmt.Printf("    -> found smallest for %d = o%o (%d)\n", octIx, next_smallest, next_smallest)
-		fmt.Printf("    -> new number: o%o (%d)\n", acc, acc)
-
-		lastN[octIx] = next_smallest
-
-		instIx -= 4
+		n += 01 << (3 * octIx) // add 1 to the leftmost unmatching octal
 	}
 
-	fmt.Printf("%+v", lastN)
-
-	return acc
+	return n
 }
 
 func join[T int | byte](elems []T) string {
