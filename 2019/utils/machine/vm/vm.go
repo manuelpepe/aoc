@@ -28,7 +28,7 @@ type VM struct {
 	relativeBase int
 }
 
-const MAX_MEM = 2048
+const MAX_MEM = 4096
 
 func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 	if len(program) > MAX_MEM {
@@ -107,7 +107,7 @@ func (m *VM) evalNext() bool {
 
 	case opcodes.OP_INP:
 		if m.isStdin {
-			fmt.Fprint(m.outWriter, ">> ")
+			fmt.Print(">> ")
 			m.outWriter.Flush()
 		}
 
