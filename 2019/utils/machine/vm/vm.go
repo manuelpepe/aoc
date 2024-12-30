@@ -17,6 +17,8 @@ type VM struct {
 	memory     []int
 	intrsPoint int
 
+	halted bool
+
 	// isStdin is used to show the '>> ' legend when waiting for input
 	isStdin bool
 
@@ -41,6 +43,8 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 		memory:     mem,
 		intrsPoint: 0,
 
+		halted: false,
+
 		isStdin: isStdin,
 
 		inReader:  bufio.NewReader(in),
@@ -48,10 +52,18 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 	}
 }
 
+func (m *VM) Halted() bool {
+	return m.halted
+}
+
 func (m *VM) Run() int {
+	if m.halted {
+		panic("executing on halted vm")
+	}
+
 	for {
-		halt := m.evalNext()
-		if halt {
+		m.evalNext()
+		if m.halted {
 			break
 		}
 	}
@@ -59,12 +71,27 @@ func (m *VM) Run() int {
 	return m.memory[0]
 }
 
+func (m *VM) RunForOutput() {
+	if m.halted {
+		panic("executing on halted vm")
+	}
+
+	for {
+		ret := m.evalNext()
+		if ret || m.halted {
+			break
+		}
+	}
+}
+
 func (m *VM) evalNext() bool {
 	instr := m.curInstruction()
 
+	outputted := false
+
 	switch instr.Opcode {
 	case opcodes.OP_HALT:
-		return true // HALT
+		m.halted = true
 
 	case opcodes.OP_ADD:
 		out := instr.Params[2].Value
@@ -96,6 +123,7 @@ func (m *VM) evalNext() bool {
 	case opcodes.OP_OUT:
 		fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
 		m.outWriter.Flush()
+		outputted = true
 
 	case opcodes.OP_JOT:
 		if m.getParamValue(instr.Params[0]) != 0 {
@@ -129,7 +157,7 @@ func (m *VM) evalNext() bool {
 
 	m.advanceInstrPointer(len(instr.Params))
 
-	return false
+	return outputted
 }
 
 func (m *VM) curInstruction() opcodes.Instruction {
