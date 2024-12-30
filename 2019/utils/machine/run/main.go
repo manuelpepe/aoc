@@ -23,10 +23,10 @@ func main() {
 
 	if disPath != nil && *disPath != "" {
 		program := parser.Parse(*disPath)
-		out := vm.Dissasemble(program)
+		out := vm.DissasembleIter(program)
 
 		vix := 0
-		for _, instr := range out {
+		for instr := range out {
 			fmt.Printf("%03d:\t%s\n", vix, instr)
 			vix += 1 + len(instr.Params)
 		}

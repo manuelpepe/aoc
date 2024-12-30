@@ -1,0 +1,127 @@
+000:	MUL  	P 380	P 379	P 385	
+004:	EQUAL  	P 2367	I 810138	P 381	
+008:	JNZ  	P 381	I 12	
+011:	HALT  	
+012:	RBO  	I 2368	
+014:	ADD  	I 0	I 0	P 383	
+018:	MUL  	I 0	I 1	P 382	
+022:	ADD  	P 382	I 0	R 1	
+026:	ADD  	I 0	P 383	R 2	
+030:	MUL  	I 37	I 1	R 0	
+034:	JEZ  	I 0	I 578	
+037:	OUT  	P 382	
+039:	OUT  	P 383	
+041:	OUT  	R 1	
+043:	ADD  	P 382	I 1	P 382	
+047:	LESS  	P 382	I 36	P 381	
+051:	JNZ  	P 381	I 22	
+054:	ADD  	P 383	I 1	P 383	
+058:	LESS  	P 383	I 24	P 381	
+062:	JNZ  	P 381	I 18	
+065:	JEZ  	P 385	I 69	
+068:	HALT  	
+069:	OUT  	I -1	
+071:	OUT  	I 0	
+073:	OUT  	P 386	
+075:	INP  	P 384	
+077:	LESS  	P 384	I 0	P 381	
+081:	JNZ  	P 381	I 94	
+084:	LESS  	I 0	P 384	P 381	
+088:	JNZ  	P 381	I 108	
+091:	JNZ  	I 1	I 161	
+094:	LESS  	I 1	P 392	P 381	
+098:	JEZ  	P 381	I 161	
+101:	MUL  	I 1	I -1	P 384	
+105:	JEZ  	I 0	I 119	
+108:	LESS  	P 392	I 34	P 381	
+112:	JEZ  	P 381	I 161	
+115:	ADD  	I 0	I 1	P 384	
+119:	ADD  	I 0	P 392	R 1	
+123:	ADD  	I 22	I 0	R 2	
+127:	ADD  	I 0	I 0	R 3	
+131:	ADD  	I 0	I 138	R 0	
+135:	JNZ  	I 1	I 549	
+138:	ADD  	P 392	P 384	P 392	
+142:	ADD  	P 392	I 0	R 1	
+146:	MUL  	I 22	I 1	R 2	
+150:	ADD  	I 3	I 0	R 3	
+154:	ADD  	I 161	I 0	R 0	
+158:	JEZ  	I 0	I 549	
+161:	ADD  	I 0	I 0	P 384	
+165:	ADD  	P 388	P 390	R 1	
+169:	ADD  	P 389	I 0	R 2	
+173:	MUL  	I 1	I 180	R 0	
+177:	JEZ  	I 0	I 578	
+180:	JEZ  	R 1	I 213	
+183:	EQUAL  	R 1	I 2	P 381	
+187:	JEZ  	P 381	I 205	
+190:	ADD  	P 388	P 390	R 1	
+194:	ADD  	I 0	P 389	R 2	
+198:	ADD  	I 0	I 205	R 0	
+202:	JEZ  	I 0	I 393	
+205:	MUL  	P 390	I -1	P 390	
+209:	ADD  	I 0	I 1	P 384	
+213:	MUL  	P 388	I 1	R 1	
+217:	ADD  	P 389	P 391	R 2	
+221:	MUL  	I 228	I 1	R 0	
+225:	JEZ  	I 0	I 578	
+228:	JEZ  	R 1	I 261	
+231:	EQUAL  	R 1	I 2	P 381	
+235:	JEZ  	P 381	I 253	
+238:	MUL  	P 388	I 1	R 1	
+242:	ADD  	P 389	P 391	R 2	
+246:	ADD  	I 0	I 253	R 0	
+250:	JNZ  	I 1	I 393	
+253:	MUL  	P 391	I -1	P 391	
+257:	MUL  	I 1	I 1	P 384	
+261:	JNZ  	P 384	I 161	
+264:	ADD  	P 388	P 390	R 1	
+268:	ADD  	P 389	P 391	R 2	
+272:	MUL  	I 279	I 1	R 0	
+276:	JNZ  	I 1	I 578	
+279:	JEZ  	R 1	I 316	
+282:	EQUAL  	R 1	I 2	P 381	
+286:	JEZ  	P 381	I 304	
+289:	ADD  	P 388	P 390	R 1	
+293:	ADD  	P 389	P 391	R 2	
+297:	ADD  	I 0	I 304	R 0	
+301:	JEZ  	I 0	I 393	
+304:	MUL  	P 390	I -1	P 390	
+308:	MUL  	P 391	I -1	P 391	
+312:	ADD  	I 1	I 0	P 384	
+316:	JNZ  	P 384	I 161	
+319:	MUL  	P 388	I 1	R 1	
+323:	MUL  	I 1	P 389	R 2	
+327:	MUL  	I 1	I 0	R 3	
+331:	MUL  	I 1	I 338	R 0	
+335:	JNZ  	I 1	I 549	
+338:	ADD  	P 388	P 390	P 388	
+342:	ADD  	P 389	P 391	P 389	
+346:	ADD  	P 388	I 0	R 1	
+350:	MUL  	P 389	I 1	R 2	
+354:	ADD  	I 4	I 0	R 3	
+358:	ADD  	I 365	I 0	R 0	
+362:	JNZ  	I 1	I 549	
+365:	LESS  	P 389	I 23	P 381	
+369:	JNZ  	P 381	I 75	
+372:	OUT  	I -1	
+374:	OUT  	I 0	
+376:	OUT  	I 0	
+378:	HALT  	
+379:	NOP  	
+380:	ADD  	P 0	P 0	P 0	
+384:	NOP  	
+385:	NOP  	
+386:	NOP  	
+panic: runtime error: index out of range [0] with length 0
+
+goroutine 1 [running]:
+2019/utils/machine/vm.(*VM).curParams(0xc0000f8040)
+	/mnt/d/Dev/Go/AoC/2019/utils/machine/vm/vm.go:192 +0x1e5
+2019/utils/machine/vm.(*VM).curInstruction(0xc0000e4000?)
+	/mnt/d/Dev/Go/AoC/2019/utils/machine/vm/vm.go:173 +0x2d
+main.main.DissasembleIter.func1(0xc000106f08)
+	/mnt/d/Dev/Go/AoC/2019/utils/machine/vm/dis.go:27 +0x65
+main.main()
+	/mnt/d/Dev/Go/AoC/2019/utils/machine/run/main.go:29 +0x1b2
+exit status 2

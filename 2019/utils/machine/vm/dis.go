@@ -1,17 +1,21 @@
 package vm
 
-import "2019/utils/machine/opcodes"
+import (
+	"iter"
 
-func Dissasemble(program []int) []opcodes.Instruction {
-	m := NewVM(program, nil, nil)
+	"2019/utils/machine/opcodes"
+)
 
-	out := make([]opcodes.Instruction, 0)
+func DissasembleIter(program []int) iter.Seq[opcodes.Instruction] {
+	return func(yield func(opcodes.Instruction) bool) {
+		m := NewVM(program, nil, nil)
 
-	for m.intrsPoint < len(program) {
-		instr := m.curInstruction()
-		out = append(out, instr)
-		m.advanceInstrPointer(len(instr.Params))
+		for m.intrsPoint < len(program) {
+			instr := m.curInstruction()
+			if !yield(instr) {
+				return
+			}
+			m.advanceInstrPointer(len(instr.Params))
+		}
 	}
-
-	return out
 }
