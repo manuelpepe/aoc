@@ -24,6 +24,8 @@ type VM struct {
 
 	inReader  *bufio.Reader
 	outWriter *bufio.Writer
+
+	relativeBase int
 }
 
 const MAX_MEM = 2048
@@ -49,6 +51,8 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 
 		inReader:  bufio.NewReader(in),
 		outWriter: bufio.NewWriter(out),
+
+		relativeBase: 0,
 	}
 }
 
@@ -94,14 +98,14 @@ func (m *VM) evalNext() bool {
 		m.halted = true
 
 	case opcodes.OP_ADD:
-		out := instr.Params[2].Value
+		out := m.getWritingParamValue(instr.Params[2])
 		m.memory[out] = m.getParamValue(instr.Params[0]) + m.getParamValue(instr.Params[1])
 
 	case opcodes.OP_MUL:
-		out := instr.Params[2].Value
+		out := m.getWritingParamValue(instr.Params[2])
 		m.memory[out] = m.getParamValue(instr.Params[0]) * m.getParamValue(instr.Params[1])
 
-	case opcodes.OP_SET:
+	case opcodes.OP_INP:
 		if m.isStdin {
 			fmt.Fprint(m.outWriter, ">> ")
 			m.outWriter.Flush()
@@ -118,20 +122,20 @@ func (m *VM) evalNext() bool {
 			panic(err)
 		}
 
-		m.memory[instr.Params[0].Value] = int(v)
+		m.memory[m.getWritingParamValue(instr.Params[0])] = int(v)
 
 	case opcodes.OP_OUT:
 		fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
 		m.outWriter.Flush()
 		outputted = true
 
-	case opcodes.OP_JOT:
+	case opcodes.OP_JNZ:
 		if m.getParamValue(instr.Params[0]) != 0 {
 			m.intrsPoint = m.getParamValue(instr.Params[1])
 			return false // skip adv instr pointer
 		}
 
-	case opcodes.OP_JOF:
+	case opcodes.OP_JEZ:
 		if m.getParamValue(instr.Params[0]) == 0 {
 			m.intrsPoint = m.getParamValue(instr.Params[1])
 			return false // skip adv instr pointer
@@ -139,20 +143,23 @@ func (m *VM) evalNext() bool {
 
 	case opcodes.OP_LESS:
 		if m.getParamValue(instr.Params[0]) < m.getParamValue(instr.Params[1]) {
-			m.memory[instr.Params[2].Value] = 1
+			m.memory[m.getWritingParamValue(instr.Params[2])] = 1
 		} else {
-			m.memory[instr.Params[2].Value] = 0
+			m.memory[m.getWritingParamValue(instr.Params[2])] = 0
 		}
 
 	case opcodes.OP_EQUAL:
 		if m.getParamValue(instr.Params[0]) == m.getParamValue(instr.Params[1]) {
-			m.memory[instr.Params[2].Value] = 1
+			m.memory[m.getWritingParamValue(instr.Params[2])] = 1
 		} else {
-			m.memory[instr.Params[2].Value] = 0
+			m.memory[m.getWritingParamValue(instr.Params[2])] = 0
 		}
 
+	case opcodes.OP_RBO:
+		m.relativeBase += m.getParamValue(instr.Params[0])
+
 	default:
-		panic(fmt.Sprintf("unexpected opcode at eval: %b", instr.Opcode))
+		panic(fmt.Sprintf("unexpected opcode at eval: '%b' at $'%d'", instr.Opcode, m.intrsPoint))
 	}
 
 	m.advanceInstrPointer(len(instr.Params))
@@ -210,6 +217,25 @@ func (m *VM) getParamValue(param opcodes.Param) int {
 
 	case opcodes.ParamModeImmediate:
 		return param.Value
+
+	case opcodes.ParamModeRelative:
+		return m.memory[param.Value+m.relativeBase]
+
+	default:
+		panic(fmt.Sprintf("unexpected param mode: %b", param.ParamMode))
+	}
+}
+
+func (m *VM) getWritingParamValue(param opcodes.Param) int {
+	switch param.ParamMode {
+	case opcodes.ParamModePosition:
+		return param.Value
+
+	case opcodes.ParamModeImmediate:
+		panic("writing with immediate mode, breaks Day 5 constraint")
+
+	case opcodes.ParamModeRelative:
+		return param.Value + m.relativeBase
 
 	default:
 		panic(fmt.Sprintf("unexpected param mode: %b", param.ParamMode))
