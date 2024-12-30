@@ -16,17 +16,24 @@ func CreateInBuffer(inputs ...int) *bytes.Buffer {
 }
 
 func GetLastOutput(buf *bytes.Buffer) int {
+	outs := GetOutput(buf)
+	return outs[len(outs)-1]
+}
+
+func GetOutput(buf *bytes.Buffer) []int {
 	rawOut := buf.String()
 	rawOut = strings.TrimSuffix(rawOut, "\n")
 	lines := strings.Split(rawOut, "\n")
 
 	buf.Reset() // clear buffer
 
+	out := make([]int, len(lines))
+
 	for ix, line := range lines {
 		prefix := "OUT: "
 
 		if !strings.HasPrefix(line, prefix) {
-			panic("expected 'OUT: ' suffix")
+			panic(fmt.Sprintf("expected 'OUT: ' suffix. Got: '%s'", line))
 		}
 
 		num, err := strconv.ParseInt(line[len(prefix):], 10, 64)
@@ -34,10 +41,8 @@ func GetLastOutput(buf *bytes.Buffer) int {
 			panic(err)
 		}
 
-		if ix == len(lines)-1 {
-			return int(num)
-		}
+		out[ix] = int(num)
 	}
 
-	return -1
+	return out
 }
