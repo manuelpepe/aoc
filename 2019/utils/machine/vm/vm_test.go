@@ -1,58 +1,61 @@
 package vm
 
 import (
+	"2019/utils/machine/parser"
+	"2019/utils/machine/vmio"
+	"bytes"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Day2(t *testing.T) {
-	nums := parseDay2("res/day2-input-0.txt")
+	nums := parser.Parse("res/day2-input-0.txt")
 
-	// part 0
-	m := NewVM(nums, os.Stdin, os.Stdout)
-	out := m.Run()
+	// example
+	out := NewVM(nums, os.Stdin, os.Stdout).Run()
 	assert.Equal(t, 3500, out)
 
-	nums = parseDay2("res/day2-input-1.txt")
+	nums = parser.Parse("res/day2-input-1.txt")
 
 	// part 1
-	nums[1] = 12
-	nums[2] = 2
-	m = NewVM(nums, os.Stdin, os.Stdout)
-	out = m.Run()
+	nums[1], nums[2] = 12, 2
+	out = NewVM(nums, os.Stdin, os.Stdout).Run()
 	assert.Equal(t, 8017076, out)
 
 	// part 2
-	nums[1] = 31
-	nums[2] = 46
-	m = NewVM(nums, os.Stdin, os.Stdout)
-	out = m.Run()
+	nums[1], nums[2] = 31, 46
+	out = NewVM(nums, os.Stdin, os.Stdout).Run()
 	assert.Equal(t, 19690720, out)
 }
 
-func parseDay2(fn string) []int {
-	rawdata, err := os.ReadFile(fn)
-	if err != nil {
-		panic(err)
-	}
-	data, _ := strings.CutSuffix(string(rawdata), "\n")
-	items := strings.Split(data, ",")
+func Test_Day7(t *testing.T) {
+	nums := parser.Parse("res/day7-input-1.txt")
 
-	out := make([]int, 0)
+	outbuf := bytes.NewBuffer([]byte{})
+	NewVM(nums, vmio.CreateInBuffer(0, 1), outbuf).Run()
+	last := vmio.GetLastOutput(outbuf)
+	assert.Equal(t, 11, last)
 
-	for _, i := range items {
-		n, err := strconv.ParseInt(i, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		out = append(out, int(n))
-	}
+	outbuf = bytes.NewBuffer([]byte{})
+	NewVM(nums, vmio.CreateInBuffer(0, 2), outbuf).Run()
+	last = vmio.GetLastOutput(outbuf)
+	assert.Equal(t, 13, last)
+}
 
-	return out
+func Test_Day9(t *testing.T) {
+	nums := parser.Parse("res/day9-input-1.txt")
+
+	outbuf := bytes.NewBuffer([]byte{})
+	NewVM(nums, vmio.CreateInBuffer(1), outbuf).Run()
+	last := vmio.GetLastOutput(outbuf)
+	assert.Equal(t, 2662308295, last)
+
+	outbuf = bytes.NewBuffer([]byte{})
+	NewVM(nums, vmio.CreateInBuffer(2), outbuf).Run()
+	last = vmio.GetLastOutput(outbuf)
+	assert.Equal(t, 63441, last)
 }
 
 func Test_ParseParameterModes(t *testing.T) {
@@ -61,4 +64,11 @@ func Test_ParseParameterModes(t *testing.T) {
 
 	out = parseModes(02)
 	assert.Equal(t, out, []byte{})
+}
+
+func Test_SetWithRelativeParam(t *testing.T) {
+	program := []int{203, 0, 99}
+	m := NewVM(program, vmio.CreateInBuffer(12345), os.Stdout)
+	out := m.Run()
+	assert.Equal(t, 12345, out)
 }
