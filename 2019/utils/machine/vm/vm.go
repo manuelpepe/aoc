@@ -2,6 +2,7 @@ package vm
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"math"
@@ -54,6 +55,13 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 
 		relativeBase: 0,
 	}
+}
+
+func NewVMPiped(program []int) (*VM, io.Writer, *bytes.Buffer) {
+	inReader, inWriter := io.Pipe()
+	outbuf := bytes.NewBuffer([]byte{})
+	m := NewVM(program, inReader, outbuf)
+	return m, inWriter, outbuf
 }
 
 func (m *VM) Halted() bool {
