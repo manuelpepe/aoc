@@ -2,7 +2,9 @@ package vmio
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -45,4 +47,31 @@ func GetOutput(buf *bytes.Buffer) []int {
 	}
 
 	return out
+}
+
+type SendInputFunc func(inp []byte) bool
+
+func StartInputSender(inbuf io.Writer) (SendInputFunc, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.Background())
+	inputs := make(chan []byte)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case v := <-inputs:
+				fmt.Fprintf(inbuf, "%s\n", v)
+			}
+		}
+	}()
+
+	return func(inp []byte) bool {
+		select {
+		case inputs <- inp:
+			return true
+		case <-ctx.Done():
+			return false
+		}
+	}, cancel
 }
