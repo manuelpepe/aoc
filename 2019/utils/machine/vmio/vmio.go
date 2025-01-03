@@ -23,11 +23,7 @@ func GetLastOutput(buf *bytes.Buffer) int {
 }
 
 func GetOutput(buf *bytes.Buffer) []int {
-	rawOut := buf.String()
-	rawOut = strings.TrimSuffix(rawOut, "\n")
-	lines := strings.Split(rawOut, "\n")
-
-	buf.Reset() // clear buffer
+	lines := GetOutputRaw(buf)
 
 	out := make([]int, len(lines))
 
@@ -47,6 +43,13 @@ func GetOutput(buf *bytes.Buffer) []int {
 	}
 
 	return out
+}
+
+func GetOutputRaw(buf *bytes.Buffer) []string {
+	rawOut := buf.String()
+	buf.Reset() // clear buffer
+	rawOut = strings.TrimSuffix(rawOut, "\n")
+	return strings.Split(rawOut, "\n")
 }
 
 type SendInputFunc func(inp []byte) bool
