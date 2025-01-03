@@ -1,4 +1,4 @@
-module 7
+module 11
 
 go 1.23.2
 

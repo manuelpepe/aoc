@@ -1,12 +1,7 @@
-module 7
+module 13
 
 go 1.23.2
 
-require (
-	2019/utils v0.0.0-00010101000000-000000000000
-	golang.org/x/term v0.27.0
-)
-
-require golang.org/x/sys v0.28.0 // indirect
+require 2019/utils v0.0.0-00010101000000-000000000000
 
 replace 2019/utils => ../utils
