@@ -58,10 +58,10 @@ func StartInputSender(inbuf io.Writer) (SendInputFunc, context.CancelFunc) {
 	go func() {
 		for {
 			select {
+			case v := <-inputs:
+				inbuf.Write(v)
 			case <-ctx.Done():
 				return
-			case v := <-inputs:
-				fmt.Fprintf(inbuf, "%s\n", v)
 			}
 		}
 	}()
