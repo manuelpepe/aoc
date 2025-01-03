@@ -78,10 +78,15 @@ func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	}
 }
 
-func NewVMPiped(program []int) (*VM, io.Writer, *bytes.Buffer) {
+func NewVMPiped(program []int, options ...vmOptionFunc) (*VM, io.Writer, *bytes.Buffer) {
 	inReader, inWriter := io.Pipe()
 	outbuf := bytes.NewBuffer([]byte{})
-	m := NewVM(program, WithInput(inReader), WithOutput(outbuf))
+	opts := []vmOptionFunc{
+		WithInput(inReader),
+		WithOutput(outbuf),
+	}
+	opts = append(opts, options...)
+	m := NewVM(program, opts...)
 	return m, inWriter, outbuf
 }
 
@@ -176,7 +181,12 @@ func (m *VM) evalNext() bool {
 		case IOInteger:
 			fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
 		case IOAscii:
-			fmt.Fprintf(m.outWriter, "%c", m.getParamValue(instr.Params[0]))
+			v := m.getParamValue(instr.Params[0])
+			if v < 0 || v > 255 {
+				fmt.Fprintf(m.outWriter, "%d", m.getParamValue(instr.Params[0]))
+			} else {
+				fmt.Fprintf(m.outWriter, "%c", m.getParamValue(instr.Params[0]))
+			}
 		}
 
 		m.outWriter.Flush()
