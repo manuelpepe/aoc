@@ -18,6 +18,9 @@ type VM struct {
 	memory     []int
 	intrsPoint int
 
+	// for reload
+	originalMemory []int
+
 	halted bool
 
 	// isStdin is used to show the '>> ' legend when waiting for input
@@ -41,6 +44,9 @@ func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	mem := make([]int, MAX_MEM)
 	copy(mem, program)
 
+	mem2 := make([]int, MAX_MEM)
+	copy(mem2, program)
+
 	cfg := &vmconfig{
 		reader: os.Stdin,
 		writer: os.Stdout,
@@ -57,6 +63,8 @@ func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	return &VM{
 		memory:     mem,
 		intrsPoint: 0,
+
+		originalMemory: mem2,
 
 		halted: false,
 
@@ -75,6 +83,13 @@ func NewVMPiped(program []int) (*VM, io.Writer, *bytes.Buffer) {
 	outbuf := bytes.NewBuffer([]byte{})
 	m := NewVM(program, WithInput(inReader), WithOutput(outbuf))
 	return m, inWriter, outbuf
+}
+
+func (m *VM) Restart() {
+	copy(m.memory, m.originalMemory)
+	m.intrsPoint = 0
+	m.halted = false
+	m.relativeBase = 0
 }
 
 func (m *VM) Halted() bool {
