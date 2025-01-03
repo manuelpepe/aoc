@@ -23,7 +23,11 @@ func sol1(nums []int) {
 	inBuf := createInBuffer(1)
 	outBuf := bytes.NewBuffer([]byte{})
 
-	m := vm.NewVM(nums, inBuf, outBuf)
+	m := vm.NewVM(
+		nums,
+		vm.WithInput(inBuf),
+		vm.WithOutput(outBuf),
+	)
 	m.Run()
 
 	fmt.Printf("solution 1: %d\n", getLastOutput(outBuf))
@@ -33,7 +37,11 @@ func sol2(nums []int) {
 	inBuf := createInBuffer(5)
 	outBuf := bytes.NewBuffer([]byte{})
 
-	m := vm.NewVM(nums, inBuf, outBuf)
+	m := vm.NewVM(
+		nums,
+		vm.WithInput(inBuf),
+		vm.WithOutput(outBuf),
+	)
 	m.Run()
 
 	fmt.Printf("solution 2: %d\n", getLastOutput(outBuf))

@@ -58,7 +58,7 @@ func sol1(program []int) {
 func runEHPR(program []int, startColor int) map[Pos]byte {
 	inbuf := vmio.CreateInBuffer(startColor)
 	outbuf := bytes.NewBuffer([]byte{})
-	m := vm.NewVM(program, inbuf, outbuf)
+	m := vm.NewVM(program, vm.WithInput(inbuf), vm.WithOutput(outbuf))
 
 	colors := make(map[Pos]byte)
 	curpos := Pos{0, 0}

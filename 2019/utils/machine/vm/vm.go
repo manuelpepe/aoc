@@ -23,6 +23,8 @@ type VM struct {
 	// isStdin is used to show the '>> ' legend when waiting for input
 	isStdin bool
 
+	ioMode IOMode
+
 	inReader  *bufio.Reader
 	outWriter *bufio.Writer
 
@@ -31,7 +33,7 @@ type VM struct {
 
 const MAX_MEM = 4096
 
-func NewVM(program []int, in io.Reader, out io.Writer) *VM {
+func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	if len(program) > MAX_MEM {
 		panic("memory limit exceeded")
 	}
@@ -39,7 +41,17 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 	mem := make([]int, MAX_MEM)
 	copy(mem, program)
 
-	fileIn, isFile := in.(*os.File)
+	cfg := &vmconfig{
+		reader: os.Stdin,
+		writer: os.Stdout,
+		mode:   IOInteger,
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	fileIn, isFile := cfg.reader.(*os.File)
 	isStdin := isFile && fileIn.Fd() == uintptr(syscall.Stdin)
 
 	return &VM{
@@ -49,9 +61,10 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 		halted: false,
 
 		isStdin: isStdin,
+		ioMode:  cfg.mode,
 
-		inReader:  bufio.NewReader(in),
-		outWriter: bufio.NewWriter(out),
+		inReader:  bufio.NewReader(cfg.reader),
+		outWriter: bufio.NewWriter(cfg.writer),
 
 		relativeBase: 0,
 	}
@@ -60,7 +73,7 @@ func NewVM(program []int, in io.Reader, out io.Writer) *VM {
 func NewVMPiped(program []int) (*VM, io.Writer, *bytes.Buffer) {
 	inReader, inWriter := io.Pipe()
 	outbuf := bytes.NewBuffer([]byte{})
-	m := NewVM(program, inReader, outbuf)
+	m := NewVM(program, WithInput(inReader), WithOutput(outbuf))
 	return m, inWriter, outbuf
 }
 
@@ -119,21 +132,38 @@ func (m *VM) evalNext() bool {
 			m.outWriter.Flush()
 		}
 
-		raw, err := m.inReader.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
+		switch m.ioMode {
+		case IOInteger:
+			raw, err := m.inReader.ReadString('\n')
+			if err != nil {
+				panic(err)
+			}
 
-		raw, _ = strings.CutSuffix(raw, "\n")
-		v, err := strconv.ParseInt(raw, 10, 64)
-		if err != nil {
-			panic(err)
-		}
+			raw, _ = strings.CutSuffix(raw, "\n")
+			v, err := strconv.ParseInt(raw, 10, 64)
+			if err != nil {
+				panic(err)
+			}
 
-		m.memory[m.getWritingParamValue(instr.Params[0])] = int(v)
+			m.memory[m.getWritingParamValue(instr.Params[0])] = int(v)
+
+		case IOAscii:
+			b, err := m.inReader.ReadByte()
+			if err != nil {
+				panic(err)
+			}
+
+			m.memory[m.getWritingParamValue(instr.Params[0])] = int(b)
+		}
 
 	case opcodes.OP_OUT:
-		fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
+		switch m.ioMode {
+		case IOInteger:
+			fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
+		case IOAscii:
+			fmt.Fprintf(m.outWriter, "%c", m.getParamValue(instr.Params[0]))
+		}
+
 		m.outWriter.Flush()
 		outputted = true
 

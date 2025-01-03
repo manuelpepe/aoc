@@ -47,7 +47,7 @@ func prepareArcade(program []int) (*vm.VM, [][]byte, io.Writer, *bytes.Buffer) {
 	inReader, inWriter := io.Pipe()
 	outbuf := bytes.NewBuffer([]byte{})
 
-	m := vm.NewVM(program, inReader, outbuf)
+	m := vm.NewVM(program, vm.WithInput(inReader), vm.WithOutput(outbuf))
 
 	grid := make([][]byte, 24)
 	for y := range grid {

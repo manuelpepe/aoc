@@ -39,11 +39,11 @@ PHASES:
 		}
 
 		amps := []*vm.VM{
-			vm.NewVM(program, inbuffers[0], outbuffers[0]),
-			vm.NewVM(program, inbuffers[1], outbuffers[1]),
-			vm.NewVM(program, inbuffers[2], outbuffers[2]),
-			vm.NewVM(program, inbuffers[3], outbuffers[3]),
-			vm.NewVM(program, inbuffers[4], outbuffers[4]),
+			vm.NewVM(program, vm.WithInput(inbuffers[0]), vm.WithOutput(outbuffers[0])),
+			vm.NewVM(program, vm.WithInput(inbuffers[1]), vm.WithOutput(outbuffers[1])),
+			vm.NewVM(program, vm.WithInput(inbuffers[2]), vm.WithOutput(outbuffers[2])),
+			vm.NewVM(program, vm.WithInput(inbuffers[3]), vm.WithOutput(outbuffers[3])),
+			vm.NewVM(program, vm.WithInput(inbuffers[4]), vm.WithOutput(outbuffers[4])),
 		}
 
 		lastOutput := 0
@@ -92,7 +92,7 @@ func runAmp(program []int, phase, val int) int {
 	inBuf := createInBuffer(phase, val)
 	outBuf := bytes.NewBuffer([]byte{})
 
-	m := vm.NewVM(program, inBuf, outBuf)
+	m := vm.NewVM(program, vm.WithInput(inBuf), vm.WithOutput(outBuf))
 	m.Run()
 
 	return getLastOutput(outBuf)

@@ -11,23 +11,18 @@ import (
 
 func main() {
 	program := parser.Parse(os.Args[1])
-	sol1(program)
-	sol2(program)
-
+	run(program, 1)
+	run(program, 2)
 }
 
-func sol1(program []int) {
+func run(program []int, n int) {
 	outbuf := bytes.NewBuffer([]byte{})
-	m := vm.NewVM(program, vmio.CreateInBuffer(1), outbuf)
+	m := vm.NewVM(
+		program,
+		vm.WithInput(vmio.CreateInBuffer(n)),
+		vm.WithOutput(outbuf),
+	)
 	m.Run()
 	res := vmio.GetLastOutput(outbuf)
-	fmt.Printf("solution 1: %d\n", res)
-}
-
-func sol2(program []int) {
-	outbuf := bytes.NewBuffer([]byte{})
-	m := vm.NewVM(program, vmio.CreateInBuffer(2), outbuf)
-	m.Run()
-	res := vmio.GetLastOutput(outbuf)
-	fmt.Printf("solution 2: %d\n", res)
+	fmt.Printf("solution %d: %d\n", n, res)
 }
