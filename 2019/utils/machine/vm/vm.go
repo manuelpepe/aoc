@@ -15,8 +15,12 @@ import (
 )
 
 type VM struct {
+	id         string
+	debugLevel int
+
 	memory     []int
 	intrsPoint int
+	lastOpcode opcodes.Opcode
 
 	// for reload
 	originalMemory []int
@@ -34,7 +38,7 @@ type VM struct {
 	relativeBase int
 }
 
-const MAX_MEM = 4096
+const MAX_MEM = 4096 * 2
 
 func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	if len(program) > MAX_MEM {
@@ -48,9 +52,11 @@ func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	copy(mem2, program)
 
 	cfg := &vmconfig{
-		reader: os.Stdin,
-		writer: os.Stdout,
-		mode:   IOInteger,
+		reader:     os.Stdin,
+		writer:     os.Stdout,
+		mode:       IOInteger,
+		id:         "???",
+		debugLevel: 0,
 	}
 
 	for _, opt := range opts {
@@ -61,6 +67,9 @@ func NewVM(program []int, opts ...vmOptionFunc) *VM {
 	isStdin := isFile && fileIn.Fd() == uintptr(syscall.Stdin)
 
 	return &VM{
+		id:         cfg.id,
+		debugLevel: cfg.debugLevel,
+
 		memory:     mem,
 		intrsPoint: 0,
 
@@ -122,21 +131,36 @@ func (m *VM) RunForOutput() {
 	}
 
 	for {
-		ret := m.evalNext()
-		if ret || m.halted {
+		m.evalNext()
+		if m.halted || m.lastOpcode == opcodes.OP_OUT {
 			break
 		}
 	}
 }
 
-func (m *VM) evalNext() bool {
-	instr := m.curInstruction()
+func (m *VM) RunForInput() {
+	if m.halted {
+		panic("executing on halted vm")
+	}
 
-	outputted := false
+	for {
+		m.evalNext()
+		if m.halted || m.lastOpcode == opcodes.OP_INP {
+			break
+		}
+	}
+}
+
+func (m *VM) evalNext() {
+	instr := m.curInstruction()
+	m.lastOpcode = instr.Opcode
+
+	m.debug("INSTR: %+v", instr)
 
 	switch instr.Opcode {
 	case opcodes.OP_HALT:
 		m.halted = true
+		m.debug("HALTED")
 
 	case opcodes.OP_ADD:
 		out := m.getWritingParamValue(instr.Params[2])
@@ -176,32 +200,34 @@ func (m *VM) evalNext() bool {
 			m.memory[m.getWritingParamValue(instr.Params[0])] = int(b)
 		}
 
+		m.debug("READ: %d", m.memory[m.getWritingParamValue(instr.Params[0])])
+
 	case opcodes.OP_OUT:
 		switch m.ioMode {
 		case IOInteger:
 			fmt.Fprintf(m.outWriter, "OUT: %d\n", m.getParamValue(instr.Params[0]))
+			m.debug("WROTE: %d", m.getParamValue(instr.Params[0]))
 		case IOAscii:
 			v := m.getParamValue(instr.Params[0])
 			if v < 0 || v > 255 {
-				fmt.Fprintf(m.outWriter, "%d", m.getParamValue(instr.Params[0]))
+				fmt.Fprintf(m.outWriter, "%d", v)
 			} else {
-				fmt.Fprintf(m.outWriter, "%c", m.getParamValue(instr.Params[0]))
+				fmt.Fprintf(m.outWriter, "%c", v)
 			}
 		}
 
 		m.outWriter.Flush()
-		outputted = true
 
 	case opcodes.OP_JNZ:
 		if m.getParamValue(instr.Params[0]) != 0 {
 			m.intrsPoint = m.getParamValue(instr.Params[1])
-			return false // skip adv instr pointer
+			return // skip adv instr pointer
 		}
 
 	case opcodes.OP_JEZ:
 		if m.getParamValue(instr.Params[0]) == 0 {
 			m.intrsPoint = m.getParamValue(instr.Params[1])
-			return false // skip adv instr pointer
+			return // skip adv instr pointer
 		}
 
 	case opcodes.OP_LESS:
@@ -222,12 +248,11 @@ func (m *VM) evalNext() bool {
 		m.relativeBase += m.getParamValue(instr.Params[0])
 
 	default:
-		panic(fmt.Sprintf("unexpected opcode at eval: '%b' at $'%d'", instr.Opcode, m.intrsPoint))
+		panic(fmt.Sprintf("unexpected opcode at eval: '%b' at $%d", instr.Opcode, m.intrsPoint))
 	}
 
 	m.advanceInstrPointer(len(instr.Params))
 
-	return outputted
 }
 
 func (m *VM) curInstruction() opcodes.Instruction {
@@ -311,4 +336,11 @@ func (m *VM) operand(n int) int {
 
 func (m *VM) advanceInstrPointer(n int) {
 	m.intrsPoint += n + 1
+}
+
+func (m *VM) debug(msg string, args ...any) {
+	if m.debugLevel > 0 {
+		formatted := fmt.Sprintf(msg, args...)
+		fmt.Printf("%s - %s\n", m.id, formatted)
+	}
 }
