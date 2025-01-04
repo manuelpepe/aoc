@@ -31,7 +31,7 @@ func GetOutput(buf *bytes.Buffer) []int {
 		prefix := "OUT: "
 
 		if !strings.HasPrefix(line, prefix) {
-			panic(fmt.Sprintf("expected 'OUT: ' suffix. Got: '%s'", line))
+			continue
 		}
 
 		num, err := strconv.ParseInt(line[len(prefix):], 10, 64)
@@ -62,7 +62,9 @@ func StartInputSender(inbuf io.Writer) (SendInputFunc, context.CancelFunc) {
 		for {
 			select {
 			case v := <-inputs:
-				inbuf.Write(v)
+				if _, err := inbuf.Write(v); err != nil {
+					panic(err)
+				}
 			case <-ctx.Done():
 				return
 			}

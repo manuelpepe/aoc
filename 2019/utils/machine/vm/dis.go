@@ -8,7 +8,7 @@ import (
 
 func DissasembleIter(program []int) iter.Seq[opcodes.Instruction] {
 	return func(yield func(opcodes.Instruction) bool) {
-		m := NewVM(program, nil, nil)
+		m := NewVM(program)
 
 		for m.intrsPoint < len(program) {
 			instr := m.curInstruction()
